@@ -4,6 +4,8 @@ import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
 import ViewStudents from './pages/ViewStudents';
+import Login from './pages/Login';
+import Register from './pages/Register';
 
 function App() {
   return (
@@ -15,6 +17,8 @@ function App() {
           <Route path="/view-students" element={<ViewStudents />} />
           <Route path="/all-students" element={<ViewStudents />} />
           <Route path="/students" element={<Students />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </main>
     </div>
@@ -22,4 +26,3 @@ function App() {
 }
 
 export default App;
-

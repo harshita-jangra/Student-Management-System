@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
@@ -12,6 +14,9 @@ const emptyForm = {
 };
 
 function Students() {
+  // Check if user is logged in
+  const token = localStorage.getItem('token');
+
   // Form state for student details
   const [formData, setFormData] = useState({
     name: '',
@@ -101,8 +106,27 @@ function Students() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Ensure user is authenticated
+    if (!token) {
+      setStatusMessage({
+        type: 'error',
+        text: 'Access denied. Please log in before adding a student.'
+      });
+      return;
+    }
+
+    // Client-side validation: ensure no empty fields
+    const { name, rollNo, email, course, semester, phone } = formData;
+    if (!name || !rollNo || !email || !course || !semester || !phone) {
+      setStatusMessage({
+        type: 'error',
+        text: 'Please fill in all the required fields.'
+      });
+      return;
+    }
     setMessage('');
     setError('');
+
 
     try {
       setLoading(true);
@@ -209,6 +233,21 @@ function Students() {
       <div className="card">
         <h2>{editId ? 'Edit Student' : 'Add New Student'}</h2>
 
+        {/* Authentication Warning if not logged in */}
+        {!token && (
+          <div className="alert alert-error" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <span>🔒 <strong>Login Required:</strong> You must be logged in to add a student record.</span>
+            <Link to="/login" className="btn btn-primary" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }}>
+              Log In Now
+            </Link>
+          </div>
+        )}
+
+        {/* Success or error message notification */}
+        {statusMessage.text && (
+          <div className={`alert alert-${statusMessage.type}`}>
+            {statusMessage.text}
+          </div>
         {message && (
           <div className="alert alert-success">{message}</div>
         )}
@@ -224,6 +263,7 @@ function Students() {
               name="name"
               value={formData.name}
               onChange={handleChange}
+              disabled={loading || !token}
               required
             />
           </div>
@@ -234,6 +274,7 @@ function Students() {
               name="rollNo"
               value={formData.rollNo}
               onChange={handleChange}
+              disabled={loading || !token}
               required
             />
           </div>
@@ -245,6 +286,7 @@ function Students() {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              disabled={loading || !token}
               required
             />
           </div>
@@ -255,6 +297,7 @@ function Students() {
               name="course"
               value={formData.course}
               onChange={handleChange}
+              disabled={loading || !token}
               required
             />
           </div>
@@ -265,6 +308,7 @@ function Students() {
               name="semester"
               value={formData.semester}
               onChange={handleChange}
+              disabled={loading || !token}
               required
             />
           </div>
@@ -276,10 +320,13 @@ function Students() {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
+              disabled={loading || !token}
               required
             />
           </div>
 
+          <button type="submit" className="btn btn-primary" disabled={loading || !token}>
+            {loading ? 'Adding Student...' : !token ? '🔒 Please Log In to Submit' : 'Submit Student'}
           <button type="submit" className="btn btn-primary">
             {editId ? 'Update Student' : 'Add Student'}
           </button>
@@ -294,6 +341,7 @@ function Students() {
             </button>
           )}
         </form>
+
       </div>
 
       {/* Existing Students List */}
