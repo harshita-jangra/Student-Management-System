@@ -67,28 +67,9 @@ const addStudent = async (req, res, next) => {
   }
 };
 
-// @desc    Get all students
-// @route   GET /api/students
-// @access  Public
-const getStudents = async (req, res, next) => {
-  try {
-    const students = await Student.find().sort({ name: 1 });
-
-    return res.status(200).json({
-      success: true,
-      count: students.length,
-      data: students
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 // Export controller functions
 module.exports = {
   addStudent,
   getStudents
-  getStudents,
-  addStudent
 };
 

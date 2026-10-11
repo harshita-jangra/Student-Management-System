@@ -11,6 +11,10 @@ function ViewStudents() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [courseFilter, setCourseFilter] = useState('');
+  const [semesterFilter, setSemesterFilter] = useState('');
+
   // 2. Function to fetch all students from the backend GET /api/students
   const fetchStudents = async () => {
     try {
@@ -41,6 +45,40 @@ function ViewStudents() {
   useEffect(() => {
     fetchStudents();
   }, []);
+
+
+const courses = [...new Set(
+  students.map((student) => student.course).filter(Boolean)
+)];
+
+const semesters = [...new Set(
+  students.map((student) => student.semester).filter(Boolean)
+)];
+
+const filteredStudents = students.filter((student) => {
+  const query = searchQuery.trim().toLowerCase();
+
+  const matchesSearch =
+    (student.name || '').toLowerCase().includes(query) ||
+    String(student.rollNo || '').toLowerCase().includes(query) ||
+    (student.email || '').toLowerCase().includes(query);
+
+  const matchesCourse =
+    !courseFilter || student.course === courseFilter;
+
+  const matchesSemester =
+    !semesterFilter ||
+    String(student.semester) === semesterFilter;
+
+  return matchesSearch && matchesCourse && matchesSemester;
+});
+
+const clearFilters = () => {
+  setSearchQuery('');
+  setCourseFilter('');
+  setSemesterFilter('');
+};
+
 
   return (
     <div className="page-container page-container-wide">
@@ -104,11 +142,67 @@ function ViewStudents() {
         {/* 4. Success State: Display Students Table */}
         {!loading && !errorMessage && students.length > 0 && (
           <div>
-            <div className="table-summary-bar">
-              <span>Total Students: <strong>{students.length}</strong></span>
-            </div>
-            {/* Pass students data down to StudentTable component via props */}
-            <StudentTable students={students} />
+            
+            <div className="student-filters">
+            <input
+              type="text"
+              placeholder="Search by name, roll number, or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search students"
+            />
+
+            <select
+              value={courseFilter}
+              onChange={(e) => setCourseFilter(e.target.value)}
+              aria-label="Filter by course"
+            >
+            <option value="">All Courses</option>
+              {courses.map((course) => (
+              <option key={course} value={course}>
+              {course}
+            </option>
+            ))}
+  </select>
+
+  <select
+    value={semesterFilter}
+    onChange={(e) => setSemesterFilter(e.target.value)}
+    aria-label="Filter by semester"
+  >
+    <option value="">All Semesters</option>
+    {semesters.map((semester) => (
+      <option key={semester} value={String(semester)}>
+        {semester}
+      </option>
+    ))}
+  </select>
+
+  <button
+    type="button"
+    className="btn btn-secondary"
+    onClick={clearFilters}
+  >
+    Clear Filters
+  </button>
+</div>
+
+<div className="table-summary-bar">
+  <span>
+    Showing <strong>{filteredStudents.length}</strong> of{' '}
+    <strong>{students.length}</strong> students
+  </span>
+</div>
+
+{filteredStudents.length > 0 ? (
+  <StudentTable students={filteredStudents} />
+) : (
+  <div className="state-box empty-box">
+    <h3>No Matching Students</h3>
+    <p>Try a different search term or clear your filters.</p>
+  </div>
+)}
+
           </div>
         )}
       </div>
