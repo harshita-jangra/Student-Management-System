@@ -1,20 +1,27 @@
+
 const Student = require('../models/Student');
 
-
+// @desc    Add a new student
+// @route   POST /api/students
+// @access  Public
 const addStudent = async (req, res, next) => {
   try {
     const { name, rollNo, email, course, semester, phone } = req.body;
 
-    // Validate that all required fields are present
+    // Validate required fields
     if (!name || !rollNo || !email || !course || !semester || !phone) {
       return res.status(400).json({
         success: false,
-        message: 'All fields (name, rollNo, email, course, semester, phone) are required'
+        message:
+          'All fields (name, rollNo, email, course, semester, phone) are required'
       });
     }
 
+    // Check whether the roll number already exists
+    const existingStudent = await Student.findOne({
+      rollNo: rollNo.trim()
+    });
 
-    const existingStudent = await Student.findOne({ rollNo: rollNo.trim() });
     if (existingStudent) {
       return res.status(400).json({
         success: false,
@@ -22,7 +29,7 @@ const addStudent = async (req, res, next) => {
       });
     }
 
-
+    // Create the student
     const student = await Student.create({
       name: name.trim(),
       rollNo: rollNo.trim(),
@@ -42,7 +49,9 @@ const addStudent = async (req, res, next) => {
   }
 };
 
-
+// @desc    Get all students
+// @route   GET /api/students
+// @access  Public
 const getStudents = async (req, res, next) => {
   try {
     const students = await Student.find().sort({ name: 1 });
@@ -57,8 +66,7 @@ const getStudents = async (req, res, next) => {
   }
 };
 
-
-
+// Export controller functions
 module.exports = {
   addStudent,
   getStudents
