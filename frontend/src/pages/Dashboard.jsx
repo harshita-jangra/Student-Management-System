@@ -15,9 +15,14 @@ function Dashboard() {
           <p className="welcome-subtitle">
             Manage student information and academic records in one place.
           </p>
-          <Link to="/students" className="btn btn-primary">
-            Add New Student
-          </Link>
+          <div className="dashboard-actions">
+            <Link to="/view-students" className="btn btn-primary">
+              📋 View All Students
+            </Link>
+            <Link to="/students" className="btn btn-secondary">
+              ➕ Add New Student
+            </Link>
+          </div>
         </section>
       </div>
     </div>

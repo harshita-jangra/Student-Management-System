@@ -25,7 +25,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Student routes (only POST /api/students is currently implemented)
+// Student routes (GET and POST /api/students)
 app.use('/api/students', studentRoutes);
 
 // Error handling middleware

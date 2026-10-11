@@ -21,6 +21,18 @@ function Navbar() {
           </li>
           <li>
             <Link
+              to="/view-students"
+              className={
+                location.pathname === '/view-students' || location.pathname === '/all-students'
+                  ? 'nav-link active'
+                  : 'nav-link'
+              }
+            >
+              View Students
+            </Link>
+          </li>
+          <li>
+            <Link
               to="/students"
               className={location.pathname === '/students' ? 'nav-link active' : 'nav-link'}
             >
