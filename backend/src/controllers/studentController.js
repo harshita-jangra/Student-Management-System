@@ -1,8 +1,6 @@
 const Student = require('../models/Student');
 
-// @desc    Add a new student
-// @route   POST /api/students
-// @access  Public
+
 const addStudent = async (req, res, next) => {
   try {
     const { name, rollNo, email, course, semester, phone } = req.body;
@@ -15,7 +13,7 @@ const addStudent = async (req, res, next) => {
       });
     }
 
-    // Check if a student with the same roll number already exists
+
     const existingStudent = await Student.findOne({ rollNo: rollNo.trim() });
     if (existingStudent) {
       return res.status(400).json({
@@ -24,7 +22,7 @@ const addStudent = async (req, res, next) => {
       });
     }
 
-    // Create and save new student in MongoDB
+
     const student = await Student.create({
       name: name.trim(),
       rollNo: rollNo.trim(),
@@ -44,6 +42,24 @@ const addStudent = async (req, res, next) => {
   }
 };
 
+
+const getStudents = async (req, res, next) => {
+  try {
+    const students = await Student.find().sort({ name: 1 });
+
+    return res.status(200).json({
+      success: true,
+      count: students.length,
+      data: students
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
 module.exports = {
-  addStudent
+  addStudent,
+  getStudents
 };

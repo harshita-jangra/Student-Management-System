@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 
 function Students() {
-  // Form state for student details
+  // Form state
   const [formData, setFormData] = useState({
     name: '',
     rollNo: '',
@@ -12,26 +13,92 @@ function Students() {
     phone: ''
   });
 
-  // State for submission feedback and loading indicator
-  const [loading, setLoading] = useState(false);
-  const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
+  // Student records and filters
+  const [students, setStudents] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [courseFilter, setCourseFilter] = useState('');
+  const [semesterFilter, setSemesterFilter] = useState('');
 
-  // Update form fields on input change
+  // Submission feedback and loading
+  const [loading, setLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState({
+    type: '',
+    text: ''
+  });
+
+  // Update form fields
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     setFormData((prevData) => ({
       ...prevData,
       [name]: value
     }));
   };
 
-  // Handle form submission
+  // Fetch students from the backend
+  const fetchStudents = async () => {
+    try {
+      const response = await api.get('/students');
+      setStudents(response.data.data || []);
+    } catch (error) {
+      setStatusMessage({
+        type: 'error',
+        text: 'Failed to load students. Please check the backend.'
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  // Get unique courses and semesters for dropdowns
+  const courses = [
+    ...new Set(
+      students.map((student) => student.course).filter(Boolean)
+    )
+  ];
+
+  const semesters = [
+    ...new Set(
+      students.map((student) => student.semester).filter(Boolean)
+    )
+  ];
+
+  // Search and filter student records
+  const filteredStudents = students.filter((student) => {
+    const query = searchQuery.trim().toLowerCase();
+
+    const matchesSearch =
+      (student.name || '').toLowerCase().includes(query) ||
+      (student.rollNo || '').toLowerCase().includes(query) ||
+      (student.email || '').toLowerCase().includes(query);
+
+    const matchesCourse =
+      !courseFilter || student.course === courseFilter;
+
+    const matchesSemester =
+      !semesterFilter || student.semester === semesterFilter;
+
+    return matchesSearch && matchesCourse && matchesSemester;
+  });
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery('');
+    setCourseFilter('');
+    setSemesterFilter('');
+  };
+
+  // Submit the new student form
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setStatusMessage({ type: '', text: '' });
 
-    // Client-side validation: ensure no empty fields
     const { name, rollNo, email, course, semester, phone } = formData;
+
     if (!name || !rollNo || !email || !course || !semester || !phone) {
       setStatusMessage({
         type: 'error',
@@ -43,16 +110,14 @@ function Students() {
     try {
       setLoading(true);
 
-      // Send POST request to backend API
       const response = await api.post('/students', formData);
 
-      // Show success feedback
       setStatusMessage({
         type: 'success',
         text: response.data.message || 'Student added successfully!'
       });
 
-      // Clear the form fields after successful submission
+      // Clear the form
       setFormData({
         name: '',
         rollNo: '',
@@ -61,8 +126,10 @@ function Students() {
         semester: '',
         phone: ''
       });
+
+      // Refresh the student list
+      await fetchStudents();
     } catch (error) {
-      // Show backend error message (e.g. duplicate roll number or validation error)
       const errorMessage =
         error.response?.data?.message ||
         'Failed to connect to the server. Please ensure the backend is running.';
@@ -78,13 +145,14 @@ function Students() {
 
   return (
     <div className="page-container">
+      {/* Add Student Form */}
       <div className="card">
         <h2>Add New Student</h2>
+
         <p className="subtitle">
           Enter student information below to add a new record to MongoDB.
         </p>
 
-        {/* Success or error message notification */}
         {statusMessage.text && (
           <div className={`alert alert-${statusMessage.type}`}>
             {statusMessage.text}
@@ -176,10 +244,95 @@ function Students() {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading}
+          >
             {loading ? 'Adding Student...' : 'Submit Student'}
           </button>
         </form>
+      </div>
+
+      {/* Student Records, Search and Filters */}
+      <div className="card">
+        <h2>Student Records</h2>
+
+        <p className="subtitle">
+          Search by name, roll number, or email. Filter by course or semester.
+        </p>
+
+        <div className="student-filters">
+          <input
+            type="text"
+            placeholder="Search name, roll number, or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search students"
+          />
+
+          <select
+            value={courseFilter}
+            onChange={(e) => setCourseFilter(e.target.value)}
+            aria-label="Filter by course"
+          >
+            <option value="">All Courses</option>
+            {courses.map((course) => (
+              <option key={course} value={course}>
+                {course}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={semesterFilter}
+            onChange={(e) => setSemesterFilter(e.target.value)}
+            aria-label="Filter by semester"
+          >
+            <option value="">All Semesters</option>
+            {semesters.map((semester) => (
+              <option key={semester} value={semester}>
+                {semester}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={clearFilters}
+          >
+            Clear Filters
+          </button>
+        </div>
+
+        <p>
+          Showing {filteredStudents.length} of {students.length} students
+        </p>
+
+        {filteredStudents.length === 0 ? (
+          <p>
+            {students.length === 0
+              ? 'No students found. Add a student using the form above.'
+              : 'No students match your search or filters.'}
+          </p>
+        ) : (
+          <div className="student-list">
+            {filteredStudents.map((student) => (
+              <div
+                className="student-record"
+                key={student._id || student.rollNo}
+              >
+                <h3>{student.name}</h3>
+                <p><strong>Roll Number:</strong> {student.rollNo}</p>
+                <p><strong>Email:</strong> {student.email}</p>
+                <p><strong>Course:</strong> {student.course}</p>
+                <p><strong>Semester:</strong> {student.semester}</p>
+                <p><strong>Phone:</strong> {student.phone || 'Not provided'}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

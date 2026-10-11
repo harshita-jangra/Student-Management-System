@@ -1,8 +1,13 @@
+
 const express = require('express');
 const router = express.Router();
-const { addStudent } = require('../controllers/studentController');
 
-// POST /api/students - Add a new student
+const {
+  addStudent,
+  getStudents
+} = require('../controllers/studentController');
+
+router.get('/', getStudents);
 router.post('/', addStudent);
 
 module.exports = router;
