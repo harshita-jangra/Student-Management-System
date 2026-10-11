@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const studentRoutes = require('./routes/studentRoutes');
+const authRoutes = require('./routes/authRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 // Load environment variables from .env
@@ -25,8 +26,13 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Authentication routes (Register and Login)
+app.use('/api/auth', authRoutes);
+
+// Student routes
 // Student routes (GET and POST /api/students)
 app.use('/api/students', studentRoutes);
+
 
 // Error handling middleware
 app.use(errorHandler);

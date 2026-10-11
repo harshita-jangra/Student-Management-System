@@ -1,8 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 function Navbar() {
   const location = useLocation();
+
+  // State to track logged-in user
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Listen for login/logout changes
+  useEffect(() => {
+    const handleAuthChange = () => {
+      try {
+        const stored = localStorage.getItem('user');
+        setCurrentUser(stored ? JSON.parse(stored) : null);
+      } catch {
+        setCurrentUser(null);
+      }
+    };
+
+    window.addEventListener('authChange', handleAuthChange);
+    return () => window.removeEventListener('authChange', handleAuthChange);
+  }, []);
+
+  // Handle Logout: removes token and user data from localStorage
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setCurrentUser(null);
+    window.dispatchEvent(new Event('authChange'));
+    window.location.href = '/login';
+  };
 
   return (
     <nav className="navbar">
@@ -39,6 +73,35 @@ function Navbar() {
               Add Student
             </Link>
           </li>
+
+          {/* Conditional rendering based on authentication state */}
+          {currentUser ? (
+            <li className="nav-auth-user">
+              <span className="user-greeting">👋 {currentUser.name}</span>
+              <button onClick={handleLogout} className="btn-logout">
+                Logout
+              </button>
+            </li>
+          ) : (
+            <>
+              <li>
+                <Link
+                  to="/login"
+                  className={location.pathname === '/login' ? 'nav-link active' : 'nav-link'}
+                >
+                  Login
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/register"
+                  className={location.pathname === '/register' ? 'nav-link active' : 'nav-link'}
+                >
+                  Register
+                </Link>
+              </li>
+            </>
+          )}
         </ul>
       </div>
     </nav>
